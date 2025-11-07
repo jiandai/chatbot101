@@ -1,8 +1,9 @@
 # Chatbot Project
 
-This repository contains two chatbot implementations: one using Azure OpenAI API and another using Anthropic's Claude API. Both chatbots provide helpful and accurate responses based on user input with conversational memory.
+This repository contains three chatbot implementations: one using OpenAI GPT API, one using Azure OpenAI API, and another using Anthropic's Claude API. All chatbots provide helpful and accurate responses based on user input with conversational memory.
 
 ## Features
+- **ChatGPT Chatbot**: Uses OpenAI GPT API for generating responses
 - **Azure OpenAI Chatbot**: Uses Azure OpenAI API for generating responses
 - **Claude Chatbot**: Uses Anthropic's Claude API for generating responses
 - Conversational memory: Maintains chat history throughout the session
@@ -11,6 +12,7 @@ This repository contains two chatbot implementations: one using Azure OpenAI API
 
 ## Prerequisites
 - Python 3.8 or higher
+- OpenAI API key (for ChatGPT chatbot)
 - Azure OpenAI API key and endpoint (for Azure chatbot)
 - Anthropic API key (for Claude chatbot)
 - `python-dotenv` library for managing environment variables
@@ -39,6 +41,9 @@ This repository contains two chatbot implementations: one using Azure OpenAI API
 
 4. Create a `.env` file in the root directory with the following content:
    ```env
+   # OpenAI Configuration
+   OPENAI_API_KEY=<your-openai-api-key>
+
    # Azure OpenAI Configuration
    ENDPOINT_URL=https://<your-endpoint>.openai.azure.com/
    DEPLOYMENT_NAME=<your-deployment-name>
@@ -50,6 +55,9 @@ This repository contains two chatbot implementations: one using Azure OpenAI API
 
 5. Run the desired chatbot script:
    ```bash
+   # For OpenAI ChatGPT chatbot
+   python chatgptbot.py
+
    # For Azure OpenAI chatbot
    python azurechatbot.py
 
@@ -64,13 +72,23 @@ This repository contains two chatbot implementations: one using Azure OpenAI API
 - Type `Q` to exit the chat loop
 
 ## File Structure
+- `chatgptbot.py`: OpenAI ChatGPT chatbot implementation
 - `azurechatbot.py`: Azure OpenAI chatbot implementation
 - `claudebot.py`: Anthropic Claude chatbot implementation
 - `.env`: Environment variables for configuration (not tracked in git)
 - `requirements.txt`: List of Python dependencies
 - `README.md`: Project documentation
 
-## Available Claude Models
+## Available Models
+
+### ChatGPT Models
+The ChatGPT chatbot uses the following model by default:
+- `gpt-5-nano`: GPT-5 nano (fast and cost-effective)
+
+Alternative models (commented in code):
+- `gpt-4o`: GPT-4o (most capable)
+
+### Claude Models
 The Claude chatbot uses the following model by default:
 - `claude-haiku-4-5-20251001`: Claude Haiku 4.5 (fastest, most cost-effective)
 
