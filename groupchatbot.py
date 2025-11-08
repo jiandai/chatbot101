@@ -4,12 +4,17 @@
 
 # Import necessary libraries
 import os
+import requests
 from dotenv import load_dotenv
 from openai import OpenAI, AzureOpenAI
 import anthropic
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Initialize DeepSeek client
+deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+deepseek_api_url = "https://api.deepseek.com/v1/chat/completions"
 
 # Initialize ChatGPT client
 chatgpt_api_key = os.getenv("OPENAI_API_KEY")
@@ -45,6 +50,16 @@ def format_history_for_chatgpt(shared_history):
         })
     return messages
 
+def format_history_for_deepseek(shared_history):
+    """Convert shared history to DeepSeek format (OpenAI-compatible)"""
+    messages = [{"role": "system", "content": system_message}]
+    for entry in shared_history:
+        messages.append({
+            "role": entry["role"],
+            "content": entry["content"]
+        })
+    return messages
+
 def format_history_for_azure(shared_history):
     """Convert shared history to Azure OpenAI format"""
     messages = [
@@ -71,9 +86,10 @@ def format_history_for_claude(shared_history):
     return messages
 
 print("=" * 60)
-print("Group Chatbot - Talk with ChatGPT, Azure OpenAI, and Claude")
+print("Group Chatbot - Talk with DeepSeek, ChatGPT, Azure OpenAI, and Claude")
 print("=" * 60)
 print("Usage:")
+print("  @deepseek <your message>    - Talk with DeepSeek")
 print("  @chatgpt <your message>    - Talk with ChatGPT")
 print("  @azureopenai <your message> - Talk with Azure OpenAI")
 print("  @claude <your message>     - Talk with Claude")
@@ -87,7 +103,64 @@ user_input = input("\nYour message: ")
 
 while user_input != "Q":
     # Check which LLM to route to based on @ mention
-    if user_input.startswith("@chatgpt "):
+    if user_input.startswith("@deepseek "):
+        # Extract the actual message (remove @deepseek prefix)
+        user_message = user_input[10:].strip()
+
+        if not user_message:
+            print("Error: Please provide a message after @deepseek")
+            user_input = input("\nYour message: ")
+            continue
+
+        if not deepseek_api_key:
+            print("Error: DeepSeek API key is missing. Set DEEPSEEK_API_KEY in your environment.")
+            user_input = input("\nYour message: ")
+            continue
+
+        # Add user message to shared history
+        shared_history.append({
+            "role": "user",
+            "content": user_message,
+            "model": "user"
+        })
+
+        # Format history for DeepSeek (OpenAI-compatible chat completions)
+        deepseek_messages = format_history_for_deepseek(shared_history)
+
+        try:
+            response_data = requests.post(
+                deepseek_api_url,
+                headers={
+                    "Authorization": f"Bearer {deepseek_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": deepseek_messages,
+                    "max_tokens": 1024
+                },
+                timeout=60,
+            )
+            response_data.raise_for_status()
+            response_json = response_data.json()
+            response = response_json["choices"][0]["message"]["content"]
+        except (requests.RequestException, KeyError, IndexError) as error:
+            print(f"Error communicating with DeepSeek: {error}")
+            shared_history.pop()
+            user_input = input("\nYour message: ")
+            continue
+
+        # Print response
+        print(f"\n[DeepSeek] >>>> {response} <<<<\n")
+
+        # Add response to shared history
+        shared_history.append({
+            "role": "assistant",
+            "content": response,
+            "model": "deepseek"
+        })
+
+    elif user_input.startswith("@chatgpt "):
         # Extract the actual message (remove @chatgpt prefix)
         user_message = user_input[9:].strip()
 
@@ -206,8 +279,8 @@ while user_input != "Q":
         })
 
     else:
-        print("\nError: Please start your message with @chatgpt, @azureopenai, or @claude")
-        print("Example: @chatgpt Tell me about Python")
+        print("\nError: Please start your message with @deepseek, @chatgpt, @azureopenai, or @claude")
+        print("Example: @deepseek Tell me about Python")
 
     # Get next user input
     user_input = input("\nYour message: ")
