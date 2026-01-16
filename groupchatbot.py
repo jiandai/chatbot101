@@ -169,6 +169,11 @@ while user_input != "Q":
             user_input = input("\nYour message: ")
             continue
 
+        if not chatgpt_api_key:
+            print("Error: OpenAI API key is missing. Set OPENAI_API_KEY in your environment.")
+            user_input = input("\nYour message: ")
+            continue
+
         # Add user message to shared history
         shared_history.append({
             "role": "user",
@@ -179,13 +184,19 @@ while user_input != "Q":
         # Format history for ChatGPT
         chatgpt_messages = format_history_for_chatgpt(shared_history)
 
-        # Generate ChatGPT response
-        completion = chatgpt_client.chat.completions.create(
-            model="gpt-5-nano",
-            messages=chatgpt_messages,
-            max_completion_tokens=1024
-        )
-        response = completion.choices[0].message.content
+        try:
+            # Generate ChatGPT response
+            completion = chatgpt_client.chat.completions.create(
+                model="gpt-4o",
+                messages=chatgpt_messages,
+                max_tokens=1024
+            )
+            response = completion.choices[0].message.content
+        except Exception as e:
+            print(f"Error communicating with ChatGPT: {e}")
+            shared_history.pop()
+            user_input = input("\nYour message: ")
+            continue
 
         # Print response
         print(f"\n[ChatGPT] >>>> {response} <<<<\n")
